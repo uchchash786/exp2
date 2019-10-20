@@ -107,7 +107,7 @@ app.get("/auth/google/secrets",
   passport.authenticate('google', { failureRedirect: "/login" }),
   function(req, res) {
     // Successful authentication, redirect to secrets.
-    res.redirect("/secrets");
+    res.redirect("/profiles");
   });
 
 app.get("/login", function(req, res){
@@ -118,6 +118,11 @@ app.get("/register", function(req, res){
   res.render("register");
 });
 
+
+
+app.get("/profiles", function(req, res){
+  res.render("profiles");
+});
 app.get("/secrets",function(req,res){
 if (req.isAuthenticated()) {
   res.render("secrets");
@@ -129,10 +134,21 @@ if (req.isAuthenticated()) {
 
 app.get("/submit", function(req, res){
   if (req.isAuthenticated()){
-    res.render("submit");
+User.find({"secrets":{$ne:null}},function(err,foundsecret){
+  if (err) {
+    console.log(err);
   } else {
-    res.redirect("/login");
+    if (foundsecret) {
+      res.render("submit");
+    }else {
+        res.render("secrets");
+    }
   }
+}) ;
+
+}else{
+    res.redirect("/login");
+}
 });
 app.post("/submit", function(req, res){
   const submittedpatientName = req.body.patientname;
@@ -171,7 +187,8 @@ const newPatient= new Patient({
      if (err) {
        console.log(err);
      } else {
-         res.send("succesfully saved");
+       const result=foundUser.myPatientProfile;
+          res.render("mypatient",{userwithsecret:foundUser.myPatientProfile});
      }
 
          });
@@ -247,7 +264,7 @@ app.post("/login", function(req, res){
       console.log(err);
     } else {
       passport.authenticate("local")(req, res, function(){
-        res.redirect("/secrets");
+        res.redirect("/submit");
       });
     }
   });
